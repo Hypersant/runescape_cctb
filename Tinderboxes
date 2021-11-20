@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# https://linuxcommandlibrary.com/man/xdotool.html#tldr0
+
+#####################################################
+# SCRIPT AUTHOR: Muted
+# SCRIPT PURPOSE: Collect Tinderboxes on XYZ Island
+# SCRIPT PRESREQUITES: Parked in front of the "Bank Booth" with an empty inventory
+# SCRIPT USAGE: ./Tinderboxes > result
+# LAST EDIT DATE: 08/06/2020 01:47
+#####################################################
+
+# GLOBALS
+mousePosX=0
+mousePosY=0
+
+# PARAMETERS: $1 = Row, $2 = Column
+# RETURN: Item slot dimensions [X, Y] and [WIDTH, HEIGHT]
+function getItemBox() {
+	# Left side of wall
+	item_X=$((550 + ($1 * 42)))
+
+	# Right side of wall
+	item_width=$(($item_X + 31))
+
+	# Top side of wall
+	item_Y=$((162 + ($2 * 36)))
+
+	# Bottom side of wall
+	item_height=$(($item_Y + 31))
+	
+	echo "mousePosX=$item_X; mousePosY=$item_Y"
+}
+
+function selectRow() {
+	local X=$1
+}
+
+function selectCol() {
+	local Y=$1
+}
+
+function selectSlot() {
+	local slot=$1
+	row=$slot
+	col=1
+
+	# TODO: Extract row/col from "slot number"
+	if [ $slot -gt 4 ]; then
+		local colCnt=1
+
+		# Reduce slot count (5 -> 1)
+		while [ $slot -ne 0 ]
+		do
+			# For every "4 slots": We have 1 column
+			if [ $colCnt -eq 4 ]; then
+				colCnt=1
+				col=$(( $col + 1 ))
+			fi
+
+			# Increase per slot
+			colCnt=$(( $colCnt + 1 ))
+
+			# Reduce total "slot" count
+			slot=$(( $slot - 1 ))
+		done
+
+		eval $(getItemBox $col $row)
+	else
+		eval $(getItemBox $row $col)
+	fi
+
+	echo $mousePosX $mousePosY
+}
+
+# Random range of an integer :)
+# Used in AABB (axis-aligned bound-boxing)
+# echo $((1 + RANDOM % 10))
+
+# Find the RuneLite client window by name and force it into focus
+#xdotool windowactivate --sync $(xdotool search --sync --onlyvisible --name "RuneLite")
+
+selectSlot 5
+
+#currItemX=592
+#currItemY=198
+#xdotool getactivewindow mousemove --window %1 $currItemX, $currItemY
+#sleep 2
+
+#echo Before: $currItemX
+#currItemX=$(getNextItemInRow $currItemX)
+#echo After: $currItemX
+#xdotool getactivewindow mousemove --window %1 $currItemX, $currItemY
+#sleep 2
+#echo -----------------
+#echo Before: $currItemX
+#currItemX=$(getNextItemInRow $currItemX)
+#echo After: $currItemX
+#xdotool getactivewindow mousemove --window %1 $currItemX, $currItemY
+
+#xdotool click 3
+#xdotool mousemove_relative 0, 34
+#xdotool mousemove_relative -- -63, 0
+
+###########################################################################
+#200 -> 234 (top of "DROP" action)
+#200 -> 248 (bottom of "DROP" action)
+#127 pixels wide by 14 pixels tall (relative to a "RIGHT-CLICK" of the item)
+
+#############################
+# Item menu (right-click)
+# "DROP" item data
+# TOP of "DROP" option: 34 pixels down
+# BOTTOM of "DROP" option: 48 pixels down
+#########################

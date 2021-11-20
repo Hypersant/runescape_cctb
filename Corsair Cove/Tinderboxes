@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+# https://linuxcommandlibrary.com/man/xdotool.html#tldr0
+
+#####################################################
+# SCRIPT AUTHOR: Muted
+# SCRIPT PURPOSE: Collect Tinderboxes on Corsair Cove (west of Rimmington)
+# SCRIPT PRESREQUITES: Parked in front of the "Bank Booth" with an empty inventory
+# SCRIPT USAGE: ./Tinderboxes > result
+# CREATION DATE: 08/06/2020 01:47
+# LAST EDIT DATE: 08/12/2020 22:40
+#####################################################
+
+# INCLUDE NECESSARY LIBRARY FILES :)
+#source "../$(dirname $0)/API/globals.sh"
+#source "../$(dirname $0)/API/inv_funcs.sh"
+source "../$(dirname $0)/API/XDT_wrapper.sh"
+source "../$(dirname $0)/API/interactions/items.sh"
+#source "../$(dirname $0)/API/misc_funcs.sh"
+
+#ACTIVATE_WINDOW "RuneLite"
+
+# PREFERRED_RATIO??
+# ADAPTIVE_DELAY
+# INTERACT_OPEN
+# ITEM_OPEN
+
+# Overrides global defaults
+#GLOBAL_ITEM_LOG_USE=2
+
+#source "../$(dirname $0)/API/testing.sh"
+
+#LOG_EVENT_TEST USE
+#echo ------
+
+#show_value () {
+#    local -n array=$1
+#    local idx=$2
+#    echo "${array[$idx]}"
+#}
+
+#function ZEE_FUCK() {
+#	local x=($mousePosX $mousePosY func Func_Name:${FUNCNAME[0]} foo)
+
+#	for ff in {0..4}; do
+#		echo $(show_value x $ff)
+#	done
+#}
+
+#ZEE_FUCK
+
+#function Z_LOG_EVENT() {
+#	for n in {0..3}; do
+#		case $(show_value $1 $n) in
+#			1) echo no. 1;;
+#			2) echo no. 2;;
+#			3) echo no. 3;;
+#			6) echo no. 6;;
+#		esac
+#	done
+#}
+
+#function Z_LOG() {
+#	Z_LOG_EVENT $3
+#}
+
+#function Z_USE() {
+#	Z_LOG $1 $2 $3
+#}
+
+EVENT_ID_ITEM_USE=1
+EVENT_ID_ITEM_DROP=2
+EVENT_ID_ITEM_EXAMINE=3
+EVENT_ID_ITEM_CANCEL=4
+EVENT_ID_NPC_TALK=5
+NPC_TALK=5
+
+# Function pointer? :)
+#VAR_TEST=$(LOG_EVENT_TEST USE 1 2)
+
+#x=($EVENT_ID_ITEM_USE $EVENT_ID_ITEM_DROP)
+
+#Z_USE 5 15 x
+
+#function USE() {
+#	echo "$1 $(basename $BASH_SOURCE) ${FUNCNAME[0]}"
+#}
+
+#function LOG_EVENT_TEST() {
+#	local buffer=""
+#	buffer="$buffer$($@)"
+
+#	echo "$buffer"
+#}
+
+#LOG_EVENT_TEST USE 1 2
+
+#function LOG_EVENT_T1() {
+#	echo "EVENT ID: $1"
+#	echo "EVENT EXTRA PARAMS: $2 $3"
+#}
+
+GLOBAL_LOG_NPC_INTERACT=1
+
+function eventHandler() {
+	echo "EVENT RECEIVED: $1"
+
+	case $1 in
+		1) echo "EVENT_ID_ITEM_USE: 1";;
+		5) echo "EVENT_ID_NPC_TALK: $NPC_TALK";;
+	esac
+}
+
+function NPC_INTERACT() {
+	eventHandler $1
+	#echo NPC_INTERACT CALLED
+	#echo $((VAR_TEST))
+	#echo "OPTION: $1"
+}
+
+function main() {
+	echo "Talk to banker --> NPC_INTERACT [ $NPC_TALK ]"
+	NPC_INTERACT $NPC_TALK
+}
+
+generatedEvents=()
+
+# Translate event IDs into readable names
+function lookUpEventID() {
+	local retValue=""
+
+	case $1 in
+		5) retValue="EVENT_ID_NPC_TALK";;
+	esac
+
+	echo "$retValue"
+}
+
+function Z_NPC_INTERACT() {
+	generatedEvents+=("$1")
+
+	if [ $GLOBAL_LOG_NPC_INTERACT -ne 0 ]; then
+		echo "LOGGED: \"$(lookUpEventID $1)\""
+	fi
+}
+
+#while [ true ]; do
+	#main
+	sleep 1
+
+	Z_NPC_INTERACT $NPC_TALK
+
+	for n in "${generatedEvents[@]}"
+	do
+		echo "$n"
+		unset generatedEvents[0]
+	done
+
+	echo "ARRAY:${generatedEvents[*]}"
+#done
+
+# Create entire scripts based on a series of events (5,1,2,5,2,1,1,5...)
+# Logging options are built into the series of events to be executed by the script engine
+# Coordinates and other options are also apart of the events themselves
+# Example: 5 = NPC_INTERACT event
+# The following argument determines if it's a randomized address (AABB randomized)
+# Example: 5,-1 (yes; randomize)
+# If not: The direct coordinates to be clicked are given
+# Example: 5,2561,1205
+# The next instruction set (event) is given; branched off of the previous event
+# Example: NPC_INTERACT (event ID #5) expects an "option" type event (event IDs #1..#6) to follow along with it's own AABB and logging options to be specified
+
+#for n in {0..4}; do
+#	selectSlot $n
+	#ITEM_USE 15 15 # Implicitly no longer randomized
+#	ITEM_USE
+#	ITEM_CANCEL_SELECTION
+#done
+
+#ACTIVATE_WINDOW "terminalNameHere" 0 0
+
+# STARTING LOCATION: Banker (Yusuf)
+# 1. Bank banker
+# 2. Empty inventory into the bank
+# 3. Close the banking window
+# 4. Click on the stairs
+# 5. Click on the Tinderboxes or the tile in front of them
+# 6. If clicking on the Tinderboxes: Click on them 4 more times (maximum of 5 Tinderboxes at a time)
+# 7. If clicking on on the tile in front of the Tinderboxes: Click on them 5 times
+# 8. Open the inventory menu
+# 9. Empty the inventory onto the floor
+# 10. Repeat steps 7-8 5x times (25 / 28 Tinderboxes in the inventory)
+# 11. Click on the Tinderboxes 3 more times
+# 12. Click on the remaining pool of Tinderboxes (25 + 3 / 28)
+# 13. Close the inventory menu
+# 14. Click on the stairs
+# 15. Click on the Banker (Yusuf)
+# 16. Repeat 1-14 or until a condition is met
+
+# TODO:
+# 	- Global LOGS file
+# 	- LOG_ITEM_XXX
+# 	- LOG_FILE_XXX
+# 	- Change default argument parameters
+# 	- Create a common interface for logging data
+# 	- Use a string buffer and output a concentated string at the end (clear buffer upon entry of function)
+# 	- Global color settings per 'data item' in a log (with defaults???)
+# 	- Event callback system for more generic logs (as opposed to a potentially HUGE statically written function-per-function system)???

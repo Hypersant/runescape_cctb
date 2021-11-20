@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+
+###################################################################
+# SCRIPT AUTHOR: Muted
+# SCRIPT PURPOSE: Output item slot dimensions
+# SCRIPT PRESREQUITES: None
+# SCRIPT USAGE: ./calcItemSlots > itemSlotData
+# CREATION DATE: 08/11/2020 05:00
+# LAST EDIT DATE: 08/11/2020 08:17
+###########################################################
+
+########################################
+# OPTIONS: 0 = disabled, 1 = enabled
+################################
+# VERBOSITY	- Must be enabled for the latter to work
+# HEADER	- Displays the [X, Y]... at the top
+# SLOTS		- Displays the slot number
+# COLUMNS	- Displays the column number
+# ROWS		- Displays the row number
+# METRICS	- Displays the unit metric (X, Y, W, H)
+############################
+
+FLAG_VERBOSITY=1
+FLAG_HEADER=1
+FLAG_SLOTS=1
+FLAG_COLUMNS=1
+FLAG_ROWS=1
+FLAG_METRICS=1
+
+##################
+# BEGIN SCRIPT
+##########
+
+# Current slot number's dimensions being viewed
+slotNum=1
+
+# PARAMETERS: $1 = Row, $2 = Column
+# RETURN: Item slot dimensions [X, Y] and [WIDTH, HEIGHT]
+function getItemBox() {
+	# Left side of wall
+	item_X=$((550 + ($row * 42)))
+
+	# Right side of wall
+	item_width=$(($item_X + 31))
+
+	# Top side of wall
+	item_Y=$((162 + ($col * 36)))
+
+	# Bottom side of wall
+	item_height=$(($item_Y + 31))
+
+	if [ $FLAG_METRICS -ne 0 ]; then
+		echo "[$item_X"x", $item_Y"y"], [$item_width"w", $item_height"h"]"
+	else
+		echo "[$item_Xs, $item_Y], [$item_width, $item_height]"
+	fi
+}
+
+# Output formatting
+if [ $FLAG_VERBOSITY -ne 0 ] && [ $FLAG_HEADER -ne 0 ]; then
+	echo -e "[X, Y], [WIDTH, HEIGHT]\n----------------------------------------"
+fi
+
+# Enumerating a range of slots
+for col in {1..7}; do
+
+	formattedData=""
+
+	# Output formatting
+	if [ $FLAG_VERBOSITY -ne 0 ] && [ $FLAG_COLUMNS -ne 0 ]; then
+		formattedData="COLUMN [ $col ]\n"
+	else
+		formattedData=""
+	fi
+
+	for row in {1..4}; do
+
+		# Output formatting
+		if [ $FLAG_VERBOSITY -ne 0 ] && [ $FLAG_ROWS -ne 0 ]; then
+			formattedData+="ROW [ $row ] | "
+		fi
+
+		data="$(getItemBox $row $col)"
+
+		# Output formatting
+		if [ $FLAG_VERBOSITY -ne 0 ] && [ $FLAG_SLOTS -ne 0 ]; then
+			formattedData+="POS [ $slotNum ] - $data\n"
+		else
+			formattedData+="$data\n"
+		fi
+
+		slotNum=$(($slotNum + 1))
+	done
+
+	# Output formatting
+	echo -e "$formattedData"
+done
